@@ -117,9 +117,9 @@ namespace KadastrAndHyperlinks
             string[] foldersName = Directory.GetDirectories(rootFolder);
             
             for (int columns = 1; columns <= column; columns++)
-        {
-                for (int rows = 1; rows <= row; rows++)
             {
+                for (int rows = 1; rows <= row; rows++)
+                {
                     string temp = worksheet.Cells[rows, columns].Text.Replace(":", "");
                     for (int i = 0; i < foldersName.Length; i++)
                     {
@@ -133,7 +133,10 @@ namespace KadastrAndHyperlinks
                     }
                 }
             }
+            package.Save();
         }
+
+        public ICommand GetLinks => new RelayCommand(WorkWithFileNew);
 
     }
 }

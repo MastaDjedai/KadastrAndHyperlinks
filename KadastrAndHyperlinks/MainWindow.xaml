@@ -20,15 +20,23 @@
 
 
         <Grid Grid.Column="0">
-            <StackPanel VerticalAlignment="Center">
+            <StackPanel>
                 <Button Content="Chose the excel" Command="{Binding ChoseXlsxfile}"/>
                 <TextBlock Text ="{Binding pathToXlsx}"  Background="Beige"/>
                 <Button Content="Chose folder for links" Command="{Binding ChoseFolderPath}"/>
                 <TextBlock Text="{Binding pathToFolder}" Background="Beige"/>
             </StackPanel>
+            <StackPanel VerticalAlignment="Center">
+                <ProgressBar Minimum="0" Maximum="100" Height="20"
+                             Margin="5"
+                             Value="{Binding Progress}"/>
+            </StackPanel>
         </Grid>
         <Grid Grid.Column="1">
-            <Button Content="Create Links" Command="{Binding GetLinks}"/>
+            <StackPanel>
+                <Button Content="Create Links" Command="{Binding GetLinks}" Margin="5"/>
+                <Button Content="Make folders"  Command="{Binding CreateFolder}" Margin="5"/>
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>

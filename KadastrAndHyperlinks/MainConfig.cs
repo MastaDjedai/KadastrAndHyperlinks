@@ -12,6 +12,7 @@ using OfficeOpenXml;
 using System.Windows;
 using System.IO;
 using System.Drawing;
+using System.Text.RegularExpressions;
 
 namespace KadastrAndHyperlinks
 {
@@ -136,7 +137,62 @@ namespace KadastrAndHyperlinks
             package.Save();
         }
 
-        public ICommand GetLinks => new RelayCommand(WorkWithFileNew);
+        public void MakeFoldersFromExcel()
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            string rootFolder = pathToFolder;
+            string xlsxPath = pathToXlsx;
+            ExcelPackage package = new ExcelPackage(xlsxPath);
+            var worksheet = package.Workbook.Worksheets[0];
+            int row = worksheet.Dimension.Rows;
+            int column = worksheet.Dimension.Columns;
+            string kadastrForm = @"^\d{10}:\d{2}:\d{3}:\d{4}$";
 
+            for (int columns = 1; columns <= column; columns++)
+            {
+                for (int rows = 1; rows <= row; rows++)
+                {
+                    string temp = worksheet.Cells[rows, columns].Text;
+                    bool isMatch = Regex.IsMatch(temp, kadastrForm);
+                    if(isMatch)
+                    {
+                        temp = temp.Replace(":", "");
+                        if (!string.IsNullOrEmpty(temp))
+                        {
+                            string folderPath = Path.Combine(rootFolder, temp);
+                            if(!Directory.Exists(folderPath))
+                            {
+                                Directory.CreateDirectory(folderPath);
+                            }
+                        }
+                    }
+                }
+            }
+            FillProgressBar();
+        }
+
+        private int _progress;
+        public int Progress
+        {
+            get
+            {
+                return _progress;
+            }
+            set
+            {
+                _progress = value;
+                RaisePropertyChanged(()=>Progress);
+            }
+        }
+        public void FillProgressBar()
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                Progress += 1;
+            }
+        }
+
+        public ICommand GetLinks => new RelayCommand(WorkWithFileNew);
+        public ICommand CreateFolder => new RelayCommand(MakeFoldersFromExcel);
     }
 }

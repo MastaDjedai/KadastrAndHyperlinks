@@ -1,24 +1,21 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using DevExpress.Mvvm;
-using DevExpress.Mvvm.UI;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
-using System.Windows.Forms;
-using OfficeOpenXml;
-using System.Windows;
-using System.IO;
 using System.Drawing;
+using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Windows.Forms;
+using System.Windows.Input;
 
 namespace KadastrAndHyperlinks
 {
     public class MainConfig : ViewModelBase
     {
-        
+
         private string _pathToXlsx;
         public string pathToXlsx
         {
@@ -29,7 +26,7 @@ namespace KadastrAndHyperlinks
             set
             {
                 _pathToXlsx = value;
-                RaisePropertyChanged(()=> pathToXlsx);
+                RaisePropertyChanged(() => pathToXlsx);
             }
         }
 
@@ -43,7 +40,7 @@ namespace KadastrAndHyperlinks
             set
             {
                 _pathToFolder = value;
-                RaisePropertyChanged(()=> pathToFolder);
+                RaisePropertyChanged(() => pathToFolder);
             }
         }
         private void SelectXlsxFile()
@@ -116,7 +113,7 @@ namespace KadastrAndHyperlinks
             int row = worksheet.Dimension.Rows;
             int column = worksheet.Dimension.Columns;
             string[] foldersName = Directory.GetDirectories(rootFolder);
-            
+
             for (int columns = 1; columns <= column; columns++)
             {
                 for (int rows = 1; rows <= row; rows++)
@@ -136,7 +133,44 @@ namespace KadastrAndHyperlinks
             }
             package.Save();
         }
+        public void MakeFoldersFromExcelNew()
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            string rootFolder = pathToFolder;
+            string xlsxPath = pathToXlsx;
+            ExcelPackage package = new ExcelPackage(xlsxPath);
+            var worksheet = package.Workbook.Worksheets[0];
+            int row = worksheet.Dimension.Rows;
+            int column = worksheet.Dimension.Columns;
+            string kadastrForm = @"^\d{10}:\d{2}:\d{3}:\d{4}$";
+            for (int columns = 1; columns <= column; columns++)
+            {
+                if (string.IsNullOrEmpty(worksheet.Cells[1, columns].Text))
+                {
+                    int tempRow = 1;
+                    do
+                    {
+                        tempRow++;
+                    } while (string.IsNullOrEmpty(worksheet.Cells[tempRow, columns].Text));
 
+                    for (int rows = 1; rows <= row+tempRow; rows++)
+                    {
+                        if (!string.IsNullOrEmpty(worksheet.Cells[rows, columns].Text))
+                        {
+                            string temp = worksheet.Cells[rows, columns].Text;
+                            bool isMatch = Regex.IsMatch(temp, kadastrForm);
+                            if (isMatch)
+                            {
+                                temp = temp.Replace(":", " ");
+                            }
+
+                        }
+
+                    }
+                }
+                
+            }
+        }
         public void MakeFoldersFromExcel()
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -168,7 +202,7 @@ namespace KadastrAndHyperlinks
                     }
                 }
             }
-            FillProgressBar();
+            
         }
 
         private int _progress;
@@ -181,17 +215,23 @@ namespace KadastrAndHyperlinks
             set
             {
                 _progress = value;
-                RaisePropertyChanged(()=>Progress);
+                RaisePropertyChanged(() => Progress);
             }
         }
         public void FillProgressBar()
         {
+            _progress = 0;
             for (int i = 0; i < 100; i++)
             {
                 Progress += 1;
+                Thread.Sleep(100);
             }
         }
 
+        public void checkThePath()
+        {
+
+        }
         public ICommand GetLinks => new RelayCommand(WorkWithFileNew);
         public ICommand CreateFolder => new RelayCommand(MakeFoldersFromExcel);
     }

@@ -34,8 +34,8 @@
         </Grid>
         <Grid Grid.Column="1">
             <StackPanel>
-                <Button Content="Create Links" Command="{Binding GetLinks}" Margin="5"/>
                 <Button Content="Make folders"  Command="{Binding CreateFolder}" Margin="5"/>
+                <Button Content="Create Links" Command="{Binding GetLinks}" Margin="5"/>
             </StackPanel>
         </Grid>
     </Grid>

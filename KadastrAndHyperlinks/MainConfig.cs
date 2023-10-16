@@ -70,39 +70,7 @@ namespace KadastrAndHyperlinks
                 return new RelayCommand(GetPathToMainFolder);
             }
         }
-
-        public void WorkWithFile()
-        {
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-            string xlsxPath = pathToXlsx;
-            string rootFolder = pathToFolder;
-            var package = new ExcelPackage(xlsxPath);
-            var worksheet = package.Workbook.Worksheets[0];
-            int rows = worksheet.Dimension.Rows;
-            List<string> fullFolderPath = new List<string>();
-            for (int i = 1; i <= rows; i++)
-            {
-                string temporaryStorage = worksheet.Cells[i, 1].Text.Replace(":", "");
-                fullFolderPath.Add(Path.Combine(rootFolder, temporaryStorage));
-            }
-
-            string[] folders = Directory.GetDirectories(rootFolder);
-            for (int i = 1; i <= rows; i++)
-            {
-                string temporaryStorage = worksheet.Cells[i, 1].Text.Replace(":", "");
-                bool folderExist = folders.Any(folder => Path.GetFileName(folder) == temporaryStorage);
-                if (folderExist)
-                {
-                    worksheet.Cells[i, 1].Hyperlink = new ExcelHyperLink(fullFolderPath[i - 1]);
-                    worksheet.Cells[i, 1].Style.Font.UnderLine = true;
-                    worksheet.Cells[i, 1].Style.Font.Color.SetColor(Color.Blue);
-                }
-            }
-
-            package.Save();
-        }
-
-
+                
         public void WorkWithFileNew()
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -110,8 +78,8 @@ namespace KadastrAndHyperlinks
             string rootFolder = pathToFolder;
             var package = new ExcelPackage(xlsxPath);
             var worksheet = package.Workbook.Worksheets[0];
-            int row = worksheet.Dimension.Rows;
-            int column = worksheet.Dimension.Columns;
+            int row = worksheet.Dimension.End.Row;
+            int column = worksheet.Dimension.End.Column;
             string[] foldersName = Directory.GetDirectories(rootFolder);
 
             for (int columns = 1; columns <= column; columns++)
@@ -133,44 +101,7 @@ namespace KadastrAndHyperlinks
             }
             package.Save();
         }
-        public void MakeFoldersFromExcelNew()
-        {
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-            string rootFolder = pathToFolder;
-            string xlsxPath = pathToXlsx;
-            ExcelPackage package = new ExcelPackage(xlsxPath);
-            var worksheet = package.Workbook.Worksheets[0];
-            int row = worksheet.Dimension.Rows;
-            int column = worksheet.Dimension.Columns;
-            string kadastrForm = @"^\d{10}:\d{2}:\d{3}:\d{4}$";
-            for (int columns = 1; columns <= column; columns++)
-            {
-                if (string.IsNullOrEmpty(worksheet.Cells[1, columns].Text))
-                {
-                    int tempRow = 1;
-                    do
-                    {
-                        tempRow++;
-                    } while (string.IsNullOrEmpty(worksheet.Cells[tempRow, columns].Text));
-
-                    for (int rows = 1; rows <= row+tempRow; rows++)
-                    {
-                        if (!string.IsNullOrEmpty(worksheet.Cells[rows, columns].Text))
-                        {
-                            string temp = worksheet.Cells[rows, columns].Text;
-                            bool isMatch = Regex.IsMatch(temp, kadastrForm);
-                            if (isMatch)
-                            {
-                                temp = temp.Replace(":", " ");
-                            }
-
-                        }
-
-                    }
-                }
-                
-            }
-        }
+        
         public void MakeFoldersFromExcel()
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -178,31 +109,29 @@ namespace KadastrAndHyperlinks
             string xlsxPath = pathToXlsx;
             ExcelPackage package = new ExcelPackage(xlsxPath);
             var worksheet = package.Workbook.Worksheets[0];
-            int row = worksheet.Dimension.Rows;
-            int column = worksheet.Dimension.Columns;
             string kadastrForm = @"^\d{10}:\d{2}:\d{3}:\d{4}$";
-
-            for (int columns = 1; columns <= column; columns++)
+            int lastNonEmptyColumn = worksheet.Dimension.End.Column;
+            int lastNonEmptyRow = worksheet.Dimension.End.Row;
+            for (int columns = 1; columns <= lastNonEmptyColumn; columns++)
             {
-                for (int rows = 1; rows <= row; rows++)
+                for (int rows = 1; rows <= lastNonEmptyRow; rows++)
                 {
                     string temp = worksheet.Cells[rows, columns].Text;
-                    bool isMatch = Regex.IsMatch(temp, kadastrForm);
-                    if(isMatch)
+                    if (!string.IsNullOrEmpty(temp))
                     {
-                        temp = temp.Replace(":", "");
-                        if (!string.IsNullOrEmpty(temp))
+                        bool isMatch = Regex.IsMatch(temp, kadastrForm);
+                        if(isMatch)
                         {
-                            string folderPath = Path.Combine(rootFolder, temp);
-                            if(!Directory.Exists(folderPath))
+                            temp = temp.Replace(":", "");
+                            string fullPath = Path.Combine(rootFolder, temp);
+                            if(!Directory.Exists(fullPath))
                             {
-                                Directory.CreateDirectory(folderPath);
+                                Directory.CreateDirectory(fullPath);
                             }
                         }
                     }
                 }
             }
-            
         }
 
         private int _progress;
